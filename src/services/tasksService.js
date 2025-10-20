@@ -69,3 +69,28 @@ export function createTask({title, description = "", completed = false}) {
     saveLocalTasks(tasks);
     return newTasks;
 }
+
+export function updateTask(id, patch) {
+    const tasks = loadLocalTasks();
+    const idx = tasks.findIndex((t) => t.id === id);
+    if(idx === -1) return null;
+    tasks[idx] = { ...tasks[idx], ...patch };
+    saveLocalTasks(tasks);
+    return tasks[idx];
+}
+
+export function deleteTasks(id) {
+    let tasks = loadLocalTasks();
+    tasks = tasks.filter((t) => t.id !== id);
+    saveLocalTasks(tasks);
+    return tasks;
+}
+
+export function toggleTaskCompleted(id) {
+    const tasks = loadLocalTasks();
+    const idx = tasks.findIndex((t) => t.id === id);
+    if(idx === -1) return null;
+    tasks[idx].completed = !tasks[idx].completed;
+    saveLocalTasks(tasks);
+    return tasks[idx];
+}
