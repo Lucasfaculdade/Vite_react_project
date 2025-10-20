@@ -56,3 +56,16 @@ export async function reloadFromApi(limit = 8){
 }
 
 
+export function createTask({title, description = "", completed = false}) {
+    const tasks = loadLocalTasks();
+    const newTasks = {
+        id: Date.now(),
+        title,
+        description,
+        completed,
+        createAt: Date.now(),
+    };
+    tasks.unshift(newTasks);
+    saveLocalTasks(tasks);
+    return newTasks;
+}
