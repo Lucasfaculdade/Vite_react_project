@@ -1,31 +1,46 @@
 
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import Home from "./pages/Home";
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Tasks from "./pages/Tasks";
-import Reports from './pages/Reports';
+import Login from './pages/Login';
 import Navbar from './components/Navbar';
-import Login from './pages/login';
-import Logout from './pages/Logout';
-import PrivateRoute from './routes/PrivateRoute';
+import { isAuthenticated } from './services/authService';
 
 
-function App() {
+function PrivateRoute({ children }){
+  return isAuthenticated() ? children : <Navigate to="/login" />;
+}
+
+
+export default function App() {
   
 
   return (
     <BrowserRouter>
-     <Navbar />
-      <main className="container mt-5 pt-4">
-        <Routes>
-          <Route path="/" element={<Home />}/>
-          <Route path="/login" element={<Login />}/>
-          <Route path="/logout" element={<Logout />} />
-          <Route path="/tasks" element={<PrivateRoute><Tasks /></PrivateRoute>}/>
-          <Route path="/reports" element={<PrivateRoute><Reports /></PrivateRoute>}/>
-        </Routes>
-      </main>
+    {isAuthenticated() && <Navbar />}
+      <Routes>
+        <Route path="/login" element={<Login/>}/>
+
+        <Route path="/tasks" 
+        element={
+          <PrivateRoute>
+            <Tasks/>
+          </PrivateRoute>}
+        />
+
+        <Route path="/reports"
+        element={
+          <PrivateRoute>
+            <div className="container mt-4">
+              <h3>Reports (em breve)</h3>
+            </div>
+          </PrivateRoute>
+        }
+        />
+
+        <Route path="*" element={<Navigate to="/login" />} />
+      </Routes>
     </BrowserRouter>
-  )
+  );
 }
 
-export default App
+
