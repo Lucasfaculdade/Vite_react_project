@@ -1,57 +1,68 @@
 import { useEffect, useState } from "react";
 import TaskItem from "../components/TaskItem_TEMP";
-import { getTasks, toggleTask, deleteTask } from "../services/tasksService";
+import { getTasks, toggleTask, deleteTask, addTask } from "../services/tasksService";
 
 export default function Tasks(){
     const [ tasks, setTasks ] = useState([]);
+    const [ title, setTitle ] = useState("");
+
+    const loadTasks = async () => {
+        const data = await getTasks();
+        setTasks(data);
+    };
 
     useEffect(() => {
-        setTasks(getTasks());
+        loadTasks();
     }, []);
+
+    const handleAdd = async () => {
+        if(!title) return;
+        await addTask(title);
+        setTitle("");
+        loadTasks();
+    };
 
 
 return(
-    <div className="container mt-4">
-        <div className="card shadow-sm">
-            <div className="card-body">
+   <div className="container mt-4">
+    <div className="card">
+        <div className="card-body">
+            <h4 className="mb-3">Minhas Tasks</h4>
 
-                <div className="d-flex justify-content-between align-items-center mb-4">
-                    <h4 className="mb-0">Tarefas</h4>
-                    <button className="btn btn-success">
-                        Nova Tarefa
-                    </button>
-                </div>
-
-                <div className="input-group mb-3">
-                    <span className="input-group-text">Buscar</span>
-                    <input type="text" className="form-control" placeholder="Pesquisar tarefas..."/>
-                </div>
-
-                <div className="mb-3 text-muted">
-                    Total: <strong>{tasks.length}</strong> Tarefas
-                </div>
-
-                <ul className="list-group">
-                    {tasks.length === 0 && (
-                        <li className="list-group-item text-center text-muted py-4">
-                            Nenhuma tareda encontrada
-                        </li>
-                    )}
-
-                    {tasks.map(task => (
-                        <TaskItem key={task.id} task={task} onToggle={id =>{
-                            toggleTask(id);
-                            setTasks(getTasks());
-                        }}
-                        onDelete={id => {
-                            deleteTask(id);
-                            setTasks(getTasks());
-                        }}
-                        />
-                    ))}
-                </ul>
+            <div className="input-group mb-3">
+                <input 
+                className="form-control"
+                placeholder="Nova task"
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+                />
+                <button className="btn btn-success" onClick={handleAdd}>
+                    Adicionar
+                </button>
             </div>
+
+            <ul className="list-group">
+                {tasks.map(task => (
+                    <TaskItem
+                        key={task.taspk}
+                        task={{
+                            id: task.taspk,
+                            title: task.tastitulo,
+                            completed: task.completed
+                        }}
+                        onToggle={async (id, completed) => {
+                            await toggleTask(id, completed);
+                            loadTasks();
+                        }}
+                        onDelete={async id => {
+                            await deleteTask(id);
+                            loadTasks();
+                        }}
+                    />
+                ))}
+            </ul>
         </div>
     </div>
+   </div>
 );
 }

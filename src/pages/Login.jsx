@@ -12,19 +12,12 @@ export default function Login() {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!email || !password) {
-            setError("Preenchar todos os campos");
-            return;
-        }
-
-        const sucess = login(email, password);
-
-        if(!sucess) {
-            setError("Email ou senha inválidos");
-            return;
-        }
-
+       try{
+        await login(email, password);
         navigate("/tasks");
+       } catch {
+        setError("Email ou senha inválidos.");
+       }
     };
 
     return (
