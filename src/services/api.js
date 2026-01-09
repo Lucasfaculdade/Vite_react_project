@@ -1,14 +1,17 @@
 import axios from "axios";
 
-const API_URL = "https://jsonplaceholder.typicode.com/todos";
+const API_URL = axios.create({
+    baseURL: "http://localhost:3333",
+});
 
-export async function getTasks(limit = 8){
-    try{
-        const response = await axios.get(`${API_URL}?_limit=${limit}`);
-        return response.data;
-    } catch (error) {
-        console.error("Erro ao buscar tarefas:", error);
-        return [];
+API_URL.interceptors.request.use(config => {
+    const token = localStorage.getItem("token");
+
+    if(token) {
+        config.headers.Authorization = `Bearer ${token}`;
     }
-    
-}
+
+    return config;
+});
+
+export default API_URL;

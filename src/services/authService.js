@@ -1,27 +1,25 @@
 
-const USER_KEY = "user_logged";
+import api from "./api";
 
-export function login(email, password) {
-    
-    if (email === "admin@teste.com" && password === "123456") {
-        const user = {
-            name: "Admin",
-            email,
-        };
-        localStorage.setItem(USER_KEY, JSON.stringify(user));
-        return true;
-    }
-    return false;
+export async function login(email, password) {
+    const response = await api.post("/auth/login", { email, password });    
+
+    localStorage.setItem("token", response.data.token);
+    localStorage.setItem("user", JSON.stringify(response.data.user));
+
+    return response.data.user;
+
 }
 
 export function logout() {
-    localStorage.removeItem(USER_KEY);
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
 }
 
 export function getCurrentUser() {
-    return JSON.parse(localStorage.getItem(USER_KEY));
+    return JSON.parse(localStorage.getItem("user"));
 }
 
 export function isAuthenticated() {
-    return !!localStorage.getItem(USER_KEY);
+    return !!localStorage.getItem("token");
 }

@@ -1,31 +1,20 @@
-import axios from "axios";
 
-const API_URL = "https://jsonplaceholder.typicode.com/todos";
-const STORAGE_KEY = "tasks_v1";
+import API_URL from "./api";
 
-
-export function getTasks() {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+export async function getTasks() {
+    const response = await API_URL.get("/tasks");
+    return response.data;
 }
 
-export function addTask(title) {
-    const tasks = getTasks();
-    const newTask = {
-        id: Date.now(),
-        title,
-        completed: false,
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify([...tasks, newTask]));
+export async function addTask(title) {
+    const response = await API_URL.post("/tasks", { title });
+    return response.data;
 }
 
-export function toggleTask(id) {
-    const tasks = getTasks().map(
-        task => task.id === id ? { ...task, completed: !task.completed } : task
-    );
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+export async function toggleTask(id, completed) {
+    await API_URL.put(`/tasks/${id}`, { completed });
 }
 
-export function deleteTask(id) {
-    const tasks = getTasks().filter(task => task.id !== id);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+export async function deleteTask(id) {
+    await API_URL.delete(`/tasks/${id}`);
 }
