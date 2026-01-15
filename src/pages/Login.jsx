@@ -1,23 +1,20 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { login } from "../services/authService";
+import { useAuth } from "../context/AuthContext";
 
-export default function Login() {
+export default function Login({ setAuthenticated }) {
     const navigate = useNavigate();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
+    const { login } = useAuth();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-       try{
         await login(email, password);
         navigate("/tasks");
-       } catch {
-        setError("Email ou senha inválidos.");
-       }
     };
 
     return (

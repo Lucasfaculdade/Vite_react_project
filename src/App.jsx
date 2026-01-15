@@ -4,6 +4,7 @@ import Tasks from "./pages/Tasks";
 import Login from './pages/Login';
 import Navbar from './components/Navbar';
 import { isAuthenticated } from './services/authService';
+import { useState } from 'react';
 
 
 function PrivateRoute({ children }){
@@ -12,19 +13,17 @@ function PrivateRoute({ children }){
 
 
 export default function App() {
-  
+
+  const [ authenticated, setAuthenticated ] = useState(isAuthenticated());  
 
   return (
     <BrowserRouter>
-    {isAuthenticated() && <Navbar />}
+    {authenticated && <Navbar setAuthenticated={setAuthenticated}/>}
       <Routes>
-        <Route path="/login" element={<Login/>}/>
+        <Route path="/login" element={<Login setAuthenticated={ setAuthenticated }/>}/>
 
         <Route path="/tasks" 
-        element={
-          <PrivateRoute>
-            <Tasks/>
-          </PrivateRoute>}
+        element={ authenticated ? <Tasks /> : <Navigate to="/login" /> }
         />
 
         <Route path="/reports"

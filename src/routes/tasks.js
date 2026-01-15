@@ -5,12 +5,12 @@ const db = require('.../server/db/database');
 
 router.post('/', async (req, res) => {
     try{
-        const { tastitulo, tasdescricao, tasprioridade } = req.body;
+        const { title, tasdescricao, tasprioridade } = req.body;
         const usepk = req.user.userId;
         const result = await db.query(
             `INSERT INTO tasksdash ( users_pk, tastitulo, tasdescricao, tasprioridade )
             VALUES ($1, $2, $3, $4) RETURNING *`
-            [users_pk, tastitulo, tasdescricao || NULL, prioridade || 3]
+            [users_pk, title, tasdescricao || NULL, tasprioridade || 3]
         );
         res.status(201).json(result.rows[0]);
     } catch (err) {

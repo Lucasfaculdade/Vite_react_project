@@ -8,53 +8,88 @@ const router = Router();
 router.use(authMiddleware);
 
 router.get("/", async (req, res) => {
-  const result = await pool.query(
-    "SELECT taspk, tastitulo, completed FROM tasksdash WHERE users_pk = $1 ORDER BY taspk DESC",
-    [req.user.id]
+  try{
+    const users_pk = req.user.id;
+
+    const result = await pool.query(
+    `SELECT taspk, tastitulo, tasconcluida 
+    FROM tasksdash 
+    WHERE users_pk = $1 
+    ORDER BY taspk DESC`,
+    [users_pk]
   );
-  res.json(result.rows);
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error ao listar tasks" });
+  }
 });
 
 router.post("/", async (req, res) => {
   console.log("REQ.USER", req.user);
+  console.log("BODY RECEBIDO", req.body);
   
-  const { title } = req.body;
-
-  console.log("TITLE", title);
+  try {
+    const { title } = req.body;
+    const users_pk = req.user.id;
 
   if (!title) {
     return res.status(400).json({ error: "Título obrigatório" });
   }
 
-  // 🔑 req.user.id vem do JWT (usersDash.usepk)
   const result = await pool.query(
-    `INSERT INTO tasksdash (tastitulo, users_pk)
+    `INSERT INTO tasksdash (users_pk, tastitulo)
      VALUES ($1, $2)
-     RETURNING taspk, tastitulo, tasconcluida, users_pk`,
-    [title, req.user?.id]
+     RETURNING taspk, tastitulo, tasconcluida`,
+    [users_pk, title]
   );
 
   res.status(201).json(result.rows[0]);
-});
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: "Error ao criar task" });
+  }
+ });
 
 router.put("/:taspk", async (req, res) => {
-    const { completed } = req.body;
+   try {
+    const { taspk } = req.params;
+    const { title, tasconcluida } = req.body;
+    const users_pk = req.user.id;
 
     await pool.query(
-        `UPDATE tasksdash SET completed = $1 WHERE taspk = $2 AND users_pk = $3`,
-        [completed, req.params.taspk, req.user.users_pk]
+        `UPDATE tasksdash 
+        SET 
+        tastitulo = COALESCE($1, tastitulo),
+        tasconcluida = COALESCE($2, tasconcluida)
+        WHERE taspk = $3 AND users_pk = $4`,
+        [title, tasconcluida, taspk, users_pk]
     );
 
     res.json({ message: "Task atualizada" });
+   } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Error ao atualizar task" });
+   }
 });
 
 router.delete("/:taspk", async (req, res) => {
-    await pool.query(
-        `DELETE FROM tasksdash WHERE taspk = $1 AND users_pk = $2`,
-        [req.params.taspk, req.user.users_pk]
-    );
+   try{
+      const { taspk } = req.params;
+      const users_pk = req.user.id;
+      
+      await pool.query(
+          `DELETE FROM tasksdash 
+          WHERE taspk = $1 AND users_pk = $2`,
+          [taspk, users_pk]
+      );
 
-    res.json({ message: "Task removida" });
+      res.status(204).send();
+   } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error ao deletar task" })
+   }
 });
 
 export default router;
