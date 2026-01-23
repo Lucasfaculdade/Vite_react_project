@@ -1,27 +1,34 @@
 
 import { Link, useNavigate} from "react-router-dom";
-import { getCurrentUser, logout } from "../services/authService";
+import { useAuth } from "../context/AuthContext";
 
-export default function Navbar({ setAuthenticated }){
+export default function Navbar(){
     const navigate = useNavigate();
-    const user = getCurrentUser();
-
+    const { user, logout } = useAuth();
+33
     const handleLogout = () => {
         logout();
-        setAuthenticated(false);
         navigate("/login");
     };
 
     return (
         <nav className="navbar navbar-expand-lg navbar-dark bg-dark px-4">
-            <span className="navbar-brand">Dashboard</span>
+            <Link className="nav-link text-white me-4" to="/dashboard">
+                Dashboard
+            </Link>
 
-            <div className="d-flex align-items-center gap-3 ms-auto">
+            <Link className="nav-link text-white" to="/tasks">
+                Tasks
+            </Link>
+
+            <div className="ms-auto d-flex align-items-center gap-3">
                 { user && 
                 <span className="text-white"> Olá, {user.name} </span> 
                 }
                 
-                <button className="btn btn-outline-light" onClick={handleLogout}>Sair</button>
+                <button className="btn btn-outline-light btn-sm" onClick={handleLogout}>
+                    Sair
+                </button>
             </div>
         </nav>
     );

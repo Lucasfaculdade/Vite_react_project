@@ -2,20 +2,28 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { toast } from "react-toastify";
 
-export default function Login({ setAuthenticated }) {
+export default function Login() {
     const navigate = useNavigate();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const { login } = useAuth();
 
-    const handleSubmit = async (e) => {
+    async function handleSubmit(e) {
         e.preventDefault();
 
-        await login(email, password);
+        const result = await login(email, password);
+
+        if(!result.success) {
+            toast.error(result.message);
+            return;
+        }
+
+        toast.success("Login realizado com sucesso");
         navigate("/tasks");
-    };
+    }
 
     return (
         <div className="container d-flex justify-content-center align-items-center" style={{ height: "100vh"}}>

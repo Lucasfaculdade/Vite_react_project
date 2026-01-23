@@ -18,17 +18,30 @@ export function AuthProvider({ children}) {
         setLoading(false);
     }, []);
 
-    const login = async (email, password) => {
-        const response = await api.post("/auth/login", { email, password });
+    async function login(email, password) {
+        try {
+            const response = await api.post("/auth/login", {
+                email, password,
+            });
 
-        const { token, user } = response.data;
+            const { token, user } = response.data;
 
-        localStorage.setItem("token", token);
-        localStorage.setItem("user", JSON.stringify(user));
+            localStorage.setItem("token", token);
+            localStorage.setItem("user", JSON.stringify(user));
 
-        api.defaults.headers.Authorization = `Bearer ${token}`;
-        setUser(user);
-    };
+            setUser(user);
+            setAuthenticated(true);
+
+            return { success: true };
+        } catch (err) {
+            return {
+                success: false,
+                message: 
+                    err.response?.data?.error ||
+                    "E-mail ou senha inválidos",
+            };
+        }
+    }
 
     const logout = () => {
         localStorage.removeItem("token");

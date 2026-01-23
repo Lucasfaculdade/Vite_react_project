@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import TaskItem from "../components/TaskItem_TEMP";
 import { useNavigate } from "react-router-dom";
 import { getTasks, addTask, toggleTask, deleteTask, updateTask } from "../services/tasksService";
+import { toast } from "react-toastify";
 
 
 export default function Tasks(){
@@ -16,34 +17,16 @@ export default function Tasks(){
 
     const navigate = useNavigate();
 
-    const loadTasks = async () => {
+    async function loadTasks() {
         try{
-            setLoading(true);
-            const data = await getTasks();
             setTasks(data);
-            setError("");
         } catch (err) {
-            console.error("Error ao carregar tarefas", err);
-            setError("Error ao carregar tarefas");
-        } finally {
-            setLoading(false);
-        }
+            if (err.response?.status === 401) {
+                localStorage.removeItem("token");
+                navigate("/login");
+            }
+        } 
     };
-
-    const filteredTasks = tasks.filter(task => {
-        const title = task.tastitulo || "";
-
-        const matchFilter = 
-            filter === "all" ||
-            (filter === "done" && task.tasconcluida) ||
-            (filter === "pending" && !task.tasconcluida);
-
-        const matchSearch = title
-        .toLowerCase()
-        .includes(search.toLowerCase());
-
-        return matchFilter && matchSearch;
-    });
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -52,115 +35,130 @@ export default function Tasks(){
             navigate("/login");
             return;
         }
-        setAuthChecked(true);
+
+        async function load(){
+            try{
+                const data = await getTasks();
+                setTasks(data);
+            } catch (err) {
+                if (err.response?.status === 401) {
+                    localStorage.removeItem("token");
+                    navigate("/login");
+                }
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        load();
     }, []);
 
     useEffect(() => {
-        if(!authChecked) return;
-        loadTasks();
+        if(authChecked) loadTasks();
     }, [authChecked]);
 
-    const handleAdd = async () => {
-        const value = title.trim();
-        if(!value) return;
+    async function handleAdd() {
+        if(!title.trim()) {
+            toast.warning("Digite um titulo para a task");
+            return;
+        }
 
         try {
-            setSaving(true);
-            await addTask(value);
-            setTitle("");
-            loadTasks();
-        } catch (err) {
-            console.error("Error ao criar task: ", err);
+           setSaving(true);
+           await addTask(title);
+           toast.success("Task criada com sucesso");
+           setTitle("");
+           loadTasks();
+        } catch {
+            toast.error("Erro ao criar task");
         } finally {
             setSaving(false);
         }
-    };
+    }
+    
+    async function handleDelete(taspk){
+        const confirm = window.confirm(
+            "Tem certeza que deseja excluir esta task?"
+        );
+        
+        if(!confirm) return;
 
+        try {
+            await deleteTask(taspk);
+            toast.info("Task removida");
+            loadTasks();
+        } catch (error) {
+            toast.error("Error ao remover task");
+        }
+    }
+
+    const filteredTasks = tasks.filter(task => {
+        const text = task.tastitulo || "";
+
+    const matchFilter = filter === "all" || 
+        (filter === "done" && task.tasconcluida) ||
+        (filter === "pending" && !task.tasconcluida);
+
+    const matchSearch = text.toLowerCase().includes(search.toLowerCase());
+    return matchFilter && matchSearch;
+    });
 
 return(
-   <div className="container mt-4">
-    <div className="card">
-        <div className="card-body">
-            <h4 className="mb-3">Minhas Tasks</h4>
+    <div className="container mt-4">
+        <div className="card">
+            <div className="card-body">
+                <h4 className="mb-3">Minhas Tasks</h4>
 
-            <input 
-                    className="form-control mb-3"
+                <input 
+                    className="form-control mb-3" 
                     placeholder="Buscar tarefa..."
                     value={search}
                     onChange={e => setSearch(e.target.value)}
-            />
-
-            <div className="input-group mb-3">
-                <input 
-                className="form-control"
-                placeholder="Nova task"
-                value={title}
-                onChange={e => setTitle(e.target.value)}
                 />
-                <button className="btn btn-success" onClick={handleAdd} disabled={saving}>
+
+                <div className="input-group mb-3">
+                <input 
+                    className="form-control"
+                    placeholder="Nova task"
+                    value={title}
+                    onChange={e => setTitle(e.target.value)}
+                />
+                <button
+                    className="btn btn-success"
+                    onClick={handleAdd}
+                    disabled={saving}
+                >
                     {saving ? "Salvando..." : "Adicionar"}
                 </button>
-            </div>
-
-            <div className="border rounded p-3 mb-3">
-                <div className="btn-group w-100">
-                    <button className={`btn btn-outline-primary ${filter === "all" ? "active" : ""}`} 
-                    onClick={() => setFilter("all")}>
-                        Todas
-                    </button>
-
-                    <button className={`btn btn-outline-warning ${filter === "pending" ? "active": ""}`}
-                    onClick={() => setFilter("pending")}>
-                        Pendentes
-                    </button>
-
-                    <button className={`btn btn-outline-success ${filter === "done" ? "active" : ""}`}
-                    onClick={() => setFilter("done")}>
-                        Concluídas
-                    </button>
                 </div>
+
+                {!loading && filteredTasks.length > 0 && (
+                    <ul className="list-group">
+                        {filteredTasks.map(task => (
+                            <TaskItem
+                                key={task.taspk}
+                                task={task}
+                                onToggle={async (id, done) => {
+                                    await toggleTask(id, done);
+                                    loadTasks();
+                                }}
+                                onEdit={async (id, title) => {
+                                    await updateTask(id, title);
+                                    loadTasks();
+                                }}
+                                onDelete={handleDelete}
+                            />
+                        ))}
+                    </ul>
+                )}
+
+                {!loading && filteredTasks.length === 0 && (
+                    <div className="alert alert-info text-center">
+                        Nenhuma tarefa encontrada.
+                    </div>
+                )}
             </div>
-
-            <p className="text-muted">
-                Total: {tasks.length} | Pendentes: { tasks.filter(t => !t.tasconcluida).length}
-            </p>
-
-            { loading && (
-                <div className="text-center my-4">
-                    <div className="spinner-border text-primary"/>
-                </div>
-            )}
-
-           { !loading && filteredTasks.length > 0 && (
-              <ul className="list-group">
-                {filteredTasks.map(task => (
-                    <TaskItem 
-                    key={task.taspk}
-                    task={task}
-                    onToggle={async (taspk, tasconcluida) =>{
-                        await toggleTask(taspk, tasconcluida);
-                        loadTasks();
-                    }}
-                    onEdit={async (taspk, title) => {
-                        await updateTask(taspk, title);
-                        loadTasks();
-                    }}
-                    onDelete={async taspk => {
-                        await deleteTask(taspk);
-                        loadTasks();
-                    }}
-                    />
-                ))}
-              </ul>
-           )}
-
-           {!loading && filteredTasks.length === 0 && (
-            <div className="alert alert-info text-center">
-                Nenhuma tarefa encontrada.
-            </div>
-           )}
         </div>
     </div>
-   </div>
 );
 }
