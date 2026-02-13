@@ -1,46 +1,52 @@
+import { Routes, Route, Navigate } from "react-router-dom";
+import { useAuth } from "./context/AuthContext";
 
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import Login from "./pages/Login";
 import Tasks from "./pages/Tasks";
-import Login from './pages/Login';
-import Navbar from './components/Navbar';
-import { isAuthenticated } from './services/authService';
-
-
-function PrivateRoute({ children }){
-  return isAuthenticated() ? children : <Navigate to="/login" />;
-}
-
+import Navbar from "./components/Navbar";
+import Dashboard from "./pages/Dashboard";
+import PrivateRoute from "./routes/PrivateRoute";
 
 export default function App() {
-  
+  const { user, loading } = useAuth();
+
+  if(loading) {
+    return (
+      <div className="text-center mt-5">
+        <div className="spinner-border text-primary" />
+      </div>
+    );
+  }
 
   return (
-    <BrowserRouter>
-    {isAuthenticated() && <Navbar />}
+    <>
+      { user && <Navbar /> }
       <Routes>
-        <Route path="/login" element={<Login/>}/>
-
-        <Route path="/tasks" 
-        element={
-          <PrivateRoute>
-            <Tasks/>
-          </PrivateRoute>}
+        <Route 
+          path="/login" 
+          element={!user ? <Login /> : <Navigate to="/dashboard" />} 
         />
 
-        <Route path="/reports"
+        <Route 
+          path="/tasks" 
+          element={ user ? <Tasks /> : <Navigate to="/login" />} 
+        />
+        
+       <Route 
+        path="/dashboard" 
         element={
-          <PrivateRoute>
-            <div className="container mt-4">
-              <h3>Reports (em breve)</h3>
-            </div>
-          </PrivateRoute>
-        }
+            <PrivateRoute>
+                <Dashboard />
+            </PrivateRoute>
+        } 
+       />
+
+        <Route 
+          path="*" 
+          element={ <Navigate to={ user ? "/dashboard" : "/login" }/> } 
         />
 
-        <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
-    </BrowserRouter>
+    </>
   );
 }
-
-

@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import { pool } from "./db/index.js";
 import authRoutes from "./routes/auth.routes.js";
 import tasksRoutes from "./routes/tasks.routes.js";
+import { authMiddleware } from "./middlewares/auth.middleware.js";
 
 dotenv.config();
 
@@ -12,7 +13,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use("/auth", authRoutes);
-app.use("/tasks", tasksRoutes);
+app.use("/tasks", authMiddleware, tasksRoutes);
 
 app.get("/health", async (req, res) => {
     try {

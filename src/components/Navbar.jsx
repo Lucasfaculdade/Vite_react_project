@@ -1,13 +1,11 @@
 
 import { Link, useNavigate} from "react-router-dom";
-import { getCurrentUser, logout } from "../services/authService";
+import { useAuth } from "../context/AuthContext";
 
 export default function Navbar(){
     const navigate = useNavigate();
-    const user = getCurrentUser();
-
-    if(!user) return null;
-
+    const { user, logout } = useAuth();
+33
     const handleLogout = () => {
         logout();
         navigate("/login");
@@ -15,26 +13,22 @@ export default function Navbar(){
 
     return (
         <nav className="navbar navbar-expand-lg navbar-dark bg-dark px-4">
-            <Link className="navbar-brand" to="/tasks">
+            <Link className="nav-link text-white me-4" to="/dashboard">
                 Dashboard
             </Link>
 
-            <div className="collapse navbar-collapse show">
-                <ul className="navbar-nav me-auto">
-                    <li className="nav-item">
-                        <Link className="nav-link" to="/tasks">Tasks</Link>
-                    </li>
+            <Link className="nav-link text-white" to="/tasks">
+                Tasks
+            </Link>
 
-                    <li className="nav-item">
-                        <Link className="nav-link" to="/reports">Reporsts</Link>
-                    </li>
-                </ul>
+            <div className="ms-auto d-flex align-items-center gap-3">
+                { user && 
+                <span className="text-white"> Olá, {user.name} </span> 
+                }
                 
-                <span className="navbar-text me-3">
-                    Olá, {user.name}
-                </span>
-
-                <button className="btn btn-outline-light" onClick={handleLogout}>Sair</button>
+                <button className="btn btn-outline-light btn-sm" onClick={handleLogout}>
+                    Sair
+                </button>
             </div>
         </nav>
     );

@@ -1,68 +1,81 @@
 import { useEffect, useState } from "react";
-import TaskItem from "../components/TaskItem_TEMP";
-import { getTasks, toggleTask, deleteTask, addTask } from "../services/tasksService";
+import { getTasks, addTask, deleteTask } from "../services/tasksService";
+import { toast } from "react-toastify";
+
+
 
 export default function Tasks(){
     const [ tasks, setTasks ] = useState([]);
-    const [ title, setTitle ] = useState("");
+    const [ newTask, setNewTask ] = useState("");
+    
+    async function loadTasks(){
+        try{
+            const data = await getTasks("/tasks");
+            console.log("Dados do back", data[0]);
+            setTasks(data);
+        } catch (error) {
+            console.error(error);
+            toast.error("Erro ao carregar tarefas", error);
+        }
+    }
 
-    const loadTasks = async () => {
-        const data = await getTasks();
-        setTasks(data);
-    };
+    async function handleAddTask(e) {
+        e.preventDefault();
+        if(!newTask.trim()) return;
+
+        try{
+            await addTask(newTask);
+            setNewTask("");
+            await loadTasks();
+            toast.success("Tarefa adicionada!");
+        } catch (error) {
+            toast.error("Erro ao adicionar");
+        }
+    }
+
+    async function handleDelete(id) {
+        if(window.confirm("Deseja realmente excluir?")) {
+            try {
+                await deleteTask(id);
+                await loadTasks();
+                toast.success("Tarefa removida.");
+            } catch (error) {
+                toast.error("Erro ao excluir tarefa, tente novamente mais tarde.");
+            }
+        }
+    }
 
     useEffect(() => {
         loadTasks();
     }, []);
 
-    const handleAdd = async () => {
-        if(!title) return;
-        await addTask(title);
-        setTitle("");
-        loadTasks();
-    };
 
+    return (
+        <div className="container mt-4">
+            <h1>Minhas Tarefas</h1>
 
-return(
-   <div className="container mt-4">
-    <div className="card">
-        <div className="card-body">
-            <h4 className="mb-3">Minhas Tasks</h4>
-
-            <div className="input-group mb-3">
-                <input 
-                className="form-control"
-                placeholder="Nova task"
-                value={title}
-                onChange={e => setTitle(e.target.value)}
-                />
-                <button className="btn btn-success" onClick={handleAdd}>
-                    Adicionar
-                </button>
-            </div>
+            <form className="mb-4" onSubmit={handleAddTask}>
+                <div className="input-group">
+                    <input className="form-control" 
+                           value={newTask}
+                           onChange={(e) => setNewTask(e.target.value)}
+                           placeholder="Nova tarefa..."
+                    />
+                    <button className="btn btn-primary" type="submit">Adicionar</button>
+                </div>
+            </form>
 
             <ul className="list-group">
-                {tasks.map(task => (
-                    <TaskItem
-                        key={task.taspk}
-                        task={{
-                            id: task.taspk,
-                            title: task.tastitulo,
-                            completed: task.completed
-                        }}
-                        onToggle={async (id, completed) => {
-                            await toggleTask(id, completed);
-                            loadTasks();
-                        }}
-                        onDelete={async id => {
-                            await deleteTask(id);
-                            loadTasks();
-                        }}
-                    />
+                {tasks.map((task, index) => (
+                    <li key={task.id || task._id || index} className="list-group-item d-flex justify-content-between">
+                        {task.title || task.descricao || task.task || "Tarefa sem título"}
+
+                        <button className="btn btn-danger btn-sm" onClick={() => handleDelete(task.id || task._id)}>
+                            Excluir
+                        </button>
+                    </li>
                 ))}
             </ul>
         </div>
-    </div>
-   </div>
-);
+    );
 }

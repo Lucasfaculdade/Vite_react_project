@@ -1,20 +1,23 @@
 
-import API_URL from "./api";
+import api from "./api";
 
 export async function getTasks() {
-    const response = await API_URL.get("/tasks");
+    const response = await api.get("/tasks");
     return response.data;
 }
 
 export async function addTask(title) {
-    const response = await API_URL.post("/tasks", { title });
-    return response.data;
+    return api.post("/tasks", {title});
 }
 
-export async function toggleTask(id, completed) {
-    await API_URL.put(`/tasks/${id}`, { completed });
+export async function toggleTask(taspk, completed) {
+    await api.put(`/tasks/${taspk}`, { tasconcluida: completed });
+}
+
+export async function updateTask(taspk, title) {
+    return api.put(`/tasks/${taspk}`, {title});
 }
 
 export async function deleteTask(id) {
-    await API_URL.delete(`/tasks/${id}`);
+    await api.delete(`/tasks/${id}`);
 }
