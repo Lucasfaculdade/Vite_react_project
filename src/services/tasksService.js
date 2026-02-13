@@ -18,6 +18,6 @@ export async function updateTask(taspk, title) {
     return api.put(`/tasks/${taspk}`, {title});
 }
 
-export async function deleteTask(taspk) {
-    await api.delete(`/tasks/${taspk}`);
+export async function deleteTask(id) {
+    await api.delete(`/tasks/${id}`);
 }

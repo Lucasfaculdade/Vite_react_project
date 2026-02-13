@@ -1,164 +1,81 @@
 import { useEffect, useState } from "react";
-import TaskItem from "../components/TaskItem_TEMP";
-import { useNavigate } from "react-router-dom";
-import { getTasks, addTask, toggleTask, deleteTask, updateTask } from "../services/tasksService";
+import { getTasks, addTask, deleteTask } from "../services/tasksService";
 import { toast } from "react-toastify";
+
 
 
 export default function Tasks(){
     const [ tasks, setTasks ] = useState([]);
-    const [ title, setTitle ] = useState("");
-    const [ loading, setLoading ] = useState(true);
-    const [ error, setError ] = useState("");
-    const [ filter, setFilter ] = useState("all");
-    const [ saving, setSaving ] = useState(false);
-    const [ search, setSearch ] = useState("");
-    const [ authChecked, setAuthChecked ] = useState(false);
-
-    const navigate = useNavigate();
-
-    async function loadTasks() {
+    const [ newTask, setNewTask ] = useState("");
+    
+    async function loadTasks(){
         try{
+            const data = await getTasks("/tasks");
+            console.log("Dados do back", data[0]);
             setTasks(data);
-        } catch (err) {
-            if (err.response?.status === 401) {
-                localStorage.removeItem("token");
-                navigate("/login");
+        } catch (error) {
+            console.error(error);
+            toast.error("Erro ao carregar tarefas", error);
+        }
+    }
+
+    async function handleAddTask(e) {
+        e.preventDefault();
+        if(!newTask.trim()) return;
+
+        try{
+            await addTask(newTask);
+            setNewTask("");
+            await loadTasks();
+            toast.success("Tarefa adicionada!");
+        } catch (error) {
+            toast.error("Erro ao adicionar");
+        }
+    }
+
+    async function handleDelete(id) {
+        if(window.confirm("Deseja realmente excluir?")) {
+            try {
+                await deleteTask(id);
+                await loadTasks();
+                toast.success("Tarefa removida.");
+            } catch (error) {
+                toast.error("Erro ao excluir tarefa, tente novamente mais tarde.");
             }
-        } 
-    };
+        }
+    }
 
     useEffect(() => {
-        const token = localStorage.getItem("token");
-
-        if(!token) {
-            navigate("/login");
-            return;
-        }
-
-        async function load(){
-            try{
-                const data = await getTasks();
-                setTasks(data);
-            } catch (err) {
-                if (err.response?.status === 401) {
-                    localStorage.removeItem("token");
-                    navigate("/login");
-                }
-            } finally {
-                setLoading(false);
-            }
-        }
-
-        load();
+        loadTasks();
     }, []);
 
-    useEffect(() => {
-        if(authChecked) loadTasks();
-    }, [authChecked]);
 
-    async function handleAdd() {
-        if(!title.trim()) {
-            toast.warning("Digite um titulo para a task");
-            return;
-        }
+    return (
+        <div className="container mt-4">
+            <h1>Minhas Tarefas</h1>
 
-        try {
-           setSaving(true);
-           await addTask(title);
-           toast.success("Task criada com sucesso");
-           setTitle("");
-           loadTasks();
-        } catch {
-            toast.error("Erro ao criar task");
-        } finally {
-            setSaving(false);
-        }
-    }
-    
-    async function handleDelete(taspk){
-        const confirm = window.confirm(
-            "Tem certeza que deseja excluir esta task?"
-        );
-        
-        if(!confirm) return;
-
-        try {
-            await deleteTask(taspk);
-            toast.info("Task removida");
-            loadTasks();
-        } catch (error) {
-            toast.error("Error ao remover task");
-        }
-    }
-
-    const filteredTasks = tasks.filter(task => {
-        const text = task.tastitulo || "";
-
-    const matchFilter = filter === "all" || 
-        (filter === "done" && task.tasconcluida) ||
-        (filter === "pending" && !task.tasconcluida);
-
-    const matchSearch = text.toLowerCase().includes(search.toLowerCase());
-    return matchFilter && matchSearch;
-    });
-
-return(
-    <div className="container mt-4">
-        <div className="card">
-            <div className="card-body">
-                <h4 className="mb-3">Minhas Tasks</h4>
-
-                <input 
-                    className="form-control mb-3" 
-                    placeholder="Buscar tarefa..."
-                    value={search}
-                    onChange={e => setSearch(e.target.value)}
-                />
-
-                <div className="input-group mb-3">
-                <input 
-                    className="form-control"
-                    placeholder="Nova task"
-                    value={title}
-                    onChange={e => setTitle(e.target.value)}
-                />
-                <button
-                    className="btn btn-success"
-                    onClick={handleAdd}
-                    disabled={saving}
-                >
-                    {saving ? "Salvando..." : "Adicionar"}
-                </button>
+            <form className="mb-4" onSubmit={handleAddTask}>
+                <div className="input-group">
+                    <input className="form-control" 
+                           value={newTask}
+                           onChange={(e) => setNewTask(e.target.value)}
+                           placeholder="Nova tarefa..."
+                    />
+                    <button className="btn btn-primary" type="submit">Adicionar</button>
                 </div>
+            </form>
 
-                {!loading && filteredTasks.length > 0 && (
-                    <ul className="list-group">
-                        {filteredTasks.map(task => (
-                            <TaskItem
-                                key={task.taspk}
-                                task={task}
-                                onToggle={async (id, done) => {
-                                    await toggleTask(id, done);
-                                    loadTasks();
-                                }}
-                                onEdit={async (id, title) => {
-                                    await updateTask(id, title);
-                                    loadTasks();
-                                }}
-                                onDelete={handleDelete}
-                            />
-                        ))}
-                    </ul>
-                )}
+            <ul className="list-group">
+                {tasks.map((task, index) => (
+                    <li key={task.id || task._id || index} className="list-group-item d-flex justify-content-between">
+                        {task.title || task.descricao || task.task || "Tarefa sem título"}
 
-                {!loading && filteredTasks.length === 0 && (
-                    <div className="alert alert-info text-center">
-                        Nenhuma tarefa encontrada.
-                    </div>
-                )}
-            </div>
+                        <button className="btn btn-danger btn-sm" onClick={() => handleDelete(task.id || task._id)}>
+                            Excluir
+                        </button>
+                    </li>
+                ))}
+            </ul>
         </div>
-    </div>
-);
+    );
 }

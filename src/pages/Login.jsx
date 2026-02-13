@@ -22,7 +22,7 @@ export default function Login() {
         }
 
         toast.success("Login realizado com sucesso");
-        navigate("/tasks");
+        navigate("/dashboard");
     }
 
     return (

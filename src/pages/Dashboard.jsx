@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { getTasks } from "../services/tasksService";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import { Pie } from "react-chartjs-2";
+import { toast } from "react-toastify";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -16,6 +17,7 @@ export default function Dashboard() {
             setLoading(false);
          }
          load();
+         toast.dismiss();
     }, []);
 
     if (loading) {

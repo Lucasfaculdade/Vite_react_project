@@ -5,6 +5,7 @@ import Login from "./pages/Login";
 import Tasks from "./pages/Tasks";
 import Navbar from "./components/Navbar";
 import Dashboard from "./pages/Dashboard";
+import PrivateRoute from "./routes/PrivateRoute";
 
 export default function App() {
   const { user, loading } = useAuth();
@@ -21,13 +22,30 @@ export default function App() {
     <>
       { user && <Navbar /> }
       <Routes>
-        <Route path="/login" element={<Login />} />
+        <Route 
+          path="/login" 
+          element={!user ? <Login /> : <Navigate to="/dashboard" />} 
+        />
 
-        <Route path="/tasks" element={ user ? <Tasks /> : <Navigate to="/login" />} />
+        <Route 
+          path="/tasks" 
+          element={ user ? <Tasks /> : <Navigate to="/login" />} 
+        />
+        
+       <Route 
+        path="/dashboard" 
+        element={
+            <PrivateRoute>
+                <Dashboard />
+            </PrivateRoute>
+        } 
+       />
 
-        <Route path="*" element={ <Navigate to="/login"/> } />
+        <Route 
+          path="*" 
+          element={ <Navigate to={ user ? "/dashboard" : "/login" }/> } 
+        />
 
-        <Route path="/dashboard" element={ user ? <Dashboard /> : <Navigate to="/login" />}/>
       </Routes>
     </>
   );
