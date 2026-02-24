@@ -2,13 +2,37 @@
 import api from "./api";
 
 export async function login(email, password) {
-    const response = await api.post("/auth/login", { email, password });    
+    try {
+        const response = await api.post("/auth/login", { email, password });
+    }    catch (error) {
+        if(error.response) {
+            const status = error.response.status;
+            const message = error.response.data.message;
 
-    localStorage.setItem("token", response.data.token);
-    localStorage.setItem("user", JSON.stringify(response.data.user));
+            if(error.response) {
+                const status = error.response.status;
+                const message = error.response.data.message;
 
-    return response.data.user;
+                if (status === 404) {
+                    toast.error("Este e-mail nao esta cadastrado.");
+                } else if (status === 401) {
+                    toast.error("Senha incorreta. Tenta novamente.");
+                } else {
+                    Toast.error(message || "Erro ao realizar login.");
+                }
+            } else {
+                toast.error(message || "Erro ao realizar login.");
+            }
+        } else {
+            toast.error("Servidor offline. Tente mais tarde.");
+        }
+    }
 
+
+}
+
+export async function register(name, email, password) {
+    return api.post("/auth/register/", { name, email, password });
 }
 
 export function logout() {
