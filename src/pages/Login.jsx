@@ -1,10 +1,11 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { login } from "../services/authService";
+import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
     const navigate = useNavigate();
+    const { login } = useAuth();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
@@ -37,7 +38,7 @@ export default function Login() {
                 </form>
 
                 <p className="mt-3 text-center">
-                    Não tem conta? <a href="/register"Crie uma conta aqui></a>
+                    Não tem conta? <a href="/register">Crie uma conta aqui</a>
                 </p>
             </div>
         </div>

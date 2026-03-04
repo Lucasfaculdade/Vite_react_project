@@ -4,7 +4,7 @@ import Tasks from "./pages/Tasks";
 import Login from './pages/Login';
 import Navbar from './components/Navbar';
 import { useAuth } from './context/AuthContext';
-import Register from './pages/register';
+import Register from './pages/Register';
 
 
 function PrivateRoute({ children }){
@@ -12,7 +12,7 @@ function PrivateRoute({ children }){
 
   if(loading) return <div className="text-center mt-5"><div className="spinner-border"/></div>;
   
-  return authenticated() ? children : <Navigate to="/login" />;
+  return authenticated ? children : <Navigate to="/login" />;
 }
 
 

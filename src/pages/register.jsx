@@ -33,7 +33,7 @@ export default function Register () {
                     </div>
                     <div className="mb-3">
                         <label>E-mail:</label>
-                        <Input type="email" className="form-control" required value={email} onChange={e => setEmail(e.target.value)}/>
+                        <input type="email" className="form-control" required value={email} onChange={e => setEmail(e.target.value)}/>
                     </div>
                     <div className="mb-3">
                         <label>Senha:</label>

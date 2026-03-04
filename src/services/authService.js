@@ -1,5 +1,6 @@
 
 import api from "./api";
+import { toast } from "react-toastify";
 
 export async function login(email, password) {
     try {
@@ -18,7 +19,7 @@ export async function login(email, password) {
                 } else if (status === 401) {
                     toast.error("Senha incorreta. Tenta novamente.");
                 } else {
-                    Toast.error(message || "Erro ao realizar login.");
+                    toast.error(message || "Erro ao realizar login.");
                 }
             } else {
                 toast.error(message || "Erro ao realizar login.");
@@ -32,7 +33,7 @@ export async function login(email, password) {
 }
 
 export async function register(name, email, password) {
-    return api.post("/auth/register/", { name, email, password });
+    return api.post("/auth/register", { name, email, password });
 }
 
 export function logout() {
